@@ -84,7 +84,7 @@ while st.session_state.running:
     if len(st.session_state.history) > 50:
         st.session_state.history.pop(0)
 
-    # STATUS INDICATOR
+    # STATUS
     with status_placeholder:
         if probability > 0.8:
             st.markdown("### 🔴 STATUS: CRITICAL")
@@ -103,22 +103,27 @@ while st.session_state.running:
         else:
             st.success(f"✅ Network Stable (Confidence: {1 - probability:.2f})")
 
-    # ALERT SYSTEM
+    # ALERT
     with alert_placeholder:
         if probability > 0.8:
             st.warning("🚨 CRITICAL ALERT: High fault risk!")
         else:
             st.empty()
 
-    # GRAPH
+    # GRAPH (FIXED PROPERLY)
     df_hist = pd.DataFrame(st.session_state.history)
 
+    # Sort by time (important fix)
+    df_hist = df_hist.sort_values("Time")
+
+    # Set time as index
+    df_hist.set_index("Time", inplace=True)
+
+    # Limit points (clean graph)
+    df_hist = df_hist.tail(20)
+
     with graph_placeholder:
-        st.line_chart(df_hist.rename(columns={
-            "CPU": "CPU Usage (%)",
-            "Latency": "Latency (ms)",
-            "Fault_Prob": "Fault Probability"
-        }))
+        st.line_chart(df_hist[["CPU", "Latency", "Fault_Prob"]])
 
     # LOGS
     with log_placeholder:
