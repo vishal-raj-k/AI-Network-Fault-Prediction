@@ -72,7 +72,7 @@ if st.session_state.running:
 # ------------------ DATAFRAME ------------------
 df_hist = pd.DataFrame(st.session_state.history)
 
-# ------------------ STATUS ------------------
+# ------------------ STATUS + ALERT ------------------
 if not df_hist.empty:
     prob = df_hist["Fault_Prob"].iloc[-1]
 
@@ -84,17 +84,19 @@ if not df_hist.empty:
     else:
         st.markdown("### 🟢 STATUS: NORMAL")
 
-# ------------------ GRAPHS ------------------
+# ------------------ GRAPH (CLEAN SINGLE CHART) ------------------
 if len(df_hist) > 3:
 
-    st.markdown("### 📊 CPU Usage")
-    st.line_chart(df_hist["CPU"])
+    st.markdown("### 📊 Network Metrics Trend")
 
-    st.markdown("### 📊 Latency")
-    st.line_chart(df_hist["Latency"])
+    chart_data = df_hist[["CPU", "Latency", "Fault_Prob"]].copy()
 
-    st.markdown("### 📊 Fault Probability")
-    st.line_chart(df_hist["Fault_Prob"])
+    # Normalize values (important for clean graph)
+    chart_data["CPU"] = chart_data["CPU"] / 100
+    chart_data["Latency"] = chart_data["Latency"] / 300
+    # Fault_Prob already 0–1
+
+    st.line_chart(chart_data)
 
 else:
     st.info(f"⏳ Collecting data... ({len(df_hist)}/5)")
