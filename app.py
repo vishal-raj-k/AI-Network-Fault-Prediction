@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 import random
 import datetime
+import time
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
 
@@ -40,7 +41,7 @@ if col1.button("▶ Start Monitoring"):
 if col2.button("⏹ Stop"):
     st.session_state.running = False
 
-# ------------------ DATA GENERATION ------------------
+# ------------------ GENERATE DATA ------------------
 if st.session_state.running:
 
     cpu = random.randint(10, 100)
@@ -65,7 +66,7 @@ if st.session_state.running:
         "Fault_Prob": probability
     })
 
-    # Keep last 30 points
+    # keep only last 30 records
     if len(st.session_state.history) > 30:
         st.session_state.history.pop(0)
 
@@ -84,17 +85,16 @@ if not df_hist.empty:
     else:
         st.markdown("### 🟢 STATUS: NORMAL")
 
-# ------------------ GRAPH (CLEAN SINGLE CHART) ------------------
+# ------------------ GRAPH ------------------
 if len(df_hist) > 3:
 
     st.markdown("### 📊 Network Metrics Trend")
 
     chart_data = df_hist[["CPU", "Latency", "Fault_Prob"]].copy()
 
-    # Normalize values (important for clean graph)
+    # Normalize values for clean graph
     chart_data["CPU"] = chart_data["CPU"] / 100
     chart_data["Latency"] = chart_data["Latency"] / 300
-    # Fault_Prob already 0–1
 
     st.line_chart(chart_data)
 
@@ -106,6 +106,7 @@ if not df_hist.empty:
     last = df_hist.iloc[-1]
     st.code(f"[{last['Time']}] CPU={last['CPU']}, Latency={last['Latency']}, Prob={last['Fault_Prob']:.2f}")
 
-# ------------------ AUTO REFRESH ------------------
+# ------------------ CONTROLLED REFRESH ------------------
 if st.session_state.running:
+    time.sleep(2)   # smooth refresh every 2 seconds
     st.rerun()
