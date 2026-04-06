@@ -48,8 +48,12 @@ if col2.button("⏹ Stop"):
 status_placeholder = st.empty()
 data_placeholder = st.empty()
 alert_placeholder = st.empty()
-graph_placeholder = st.empty()
 log_placeholder = st.empty()
+
+# Graph placeholders (IMPORTANT FIX)
+cpu_chart = st.empty()
+latency_chart = st.empty()
+prob_chart = st.empty()
 
 # Main loop
 while st.session_state.running:
@@ -81,7 +85,7 @@ while st.session_state.running:
     })
 
     # Limit history
-    if len(st.session_state.history) > 50:
+    if len(st.session_state.history) > 30:
         st.session_state.history.pop(0)
 
     # STATUS
@@ -93,7 +97,7 @@ while st.session_state.running:
         else:
             st.markdown("### 🟢 STATUS: NORMAL")
 
-    # DATA DISPLAY
+    # DATA
     with data_placeholder.container():
         st.write(f"⏱ Time: {timestamp}")
         st.write(f"CPU: {cpu}% | Latency: {latency} ms | Packet Loss: {packet_loss:.2f}%")
@@ -110,22 +114,24 @@ while st.session_state.running:
         else:
             st.empty()
 
-    # GRAPH (FIXED - separate charts)
-
+    # GRAPH DATA
     df_hist = pd.DataFrame(st.session_state.history)
 
-    df_hist = df_hist.sort_values("Time")
-    df_hist.set_index("Time", inplace=True)
+    # FIX: use numeric index (no time sorting issues)
+    df_hist.reset_index(drop=True, inplace=True)
 
-    df_hist = df_hist.tail(20)
-
-    with graph_placeholder:
+    # CPU Graph
+    with cpu_chart:
         st.markdown("### 📊 CPU Usage")
         st.line_chart(df_hist["CPU"])
 
+    # Latency Graph
+    with latency_chart:
         st.markdown("### 📊 Latency")
         st.line_chart(df_hist["Latency"])
 
+    # Probability Graph
+    with prob_chart:
         st.markdown("### 📊 Fault Probability")
         st.line_chart(df_hist["Fault_Prob"])
 
