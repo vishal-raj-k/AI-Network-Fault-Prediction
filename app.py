@@ -110,20 +110,24 @@ while st.session_state.running:
         else:
             st.empty()
 
-    # GRAPH (FIXED PROPERLY)
+    # GRAPH (FIXED - separate charts)
+
     df_hist = pd.DataFrame(st.session_state.history)
 
-    # Sort by time (important fix)
     df_hist = df_hist.sort_values("Time")
-
-    # Set time as index
     df_hist.set_index("Time", inplace=True)
 
-    # Limit points (clean graph)
     df_hist = df_hist.tail(20)
 
     with graph_placeholder:
-        st.line_chart(df_hist[["CPU", "Latency", "Fault_Prob"]])
+        st.markdown("### 📊 CPU Usage")
+        st.line_chart(df_hist["CPU"])
+
+        st.markdown("### 📊 Latency")
+        st.line_chart(df_hist["Latency"])
+
+        st.markdown("### 📊 Fault Probability")
+        st.line_chart(df_hist["Fault_Prob"])
 
     # LOGS
     with log_placeholder:
