@@ -6,13 +6,13 @@ import datetime
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
 
-# Page config
+# ------------------ CONFIG ------------------
 st.set_page_config(page_title="AI Fault Predictor", layout="centered")
 
 st.title("📡 AI Network Fault Prediction System")
 st.markdown("### 🚀 Live AI Monitoring Dashboard")
 
-# Load data
+# ------------------ LOAD DATA ------------------
 df = pd.read_csv("network_data.csv")
 
 X = df.drop("fault", axis=1)
@@ -24,14 +24,14 @@ X_scaled = scaler.fit_transform(X)
 model = LogisticRegression(max_iter=500)
 model.fit(X_scaled, y)
 
-# Session state
+# ------------------ SESSION STATE ------------------
 if "running" not in st.session_state:
     st.session_state.running = False
 
 if "history" not in st.session_state:
     st.session_state.history = []
 
-# Buttons
+# ------------------ BUTTONS ------------------
 col1, col2 = st.columns(2)
 
 if col1.button("▶ Start Monitoring"):
@@ -40,7 +40,7 @@ if col1.button("▶ Start Monitoring"):
 if col2.button("⏹ Stop"):
     st.session_state.running = False
 
-# If running → generate ONE new data point per refresh
+# ------------------ DATA GENERATION ------------------
 if st.session_state.running:
 
     cpu = random.randint(10, 100)
@@ -65,26 +65,27 @@ if st.session_state.running:
         "Fault_Prob": probability
     })
 
+    # Keep last 30 points
     if len(st.session_state.history) > 30:
         st.session_state.history.pop(0)
 
-# Convert to dataframe
+# ------------------ DATAFRAME ------------------
 df_hist = pd.DataFrame(st.session_state.history)
 
-# STATUS
+# ------------------ STATUS ------------------
 if not df_hist.empty:
     prob = df_hist["Fault_Prob"].iloc[-1]
 
     if prob > 0.8:
         st.markdown("### 🔴 STATUS: CRITICAL")
-        st.warning("🚨 CRITICAL ALERT")
+        st.warning("🚨 CRITICAL ALERT: High fault risk!")
     elif prob > 0.6:
         st.markdown("### 🟠 STATUS: WARNING")
     else:
         st.markdown("### 🟢 STATUS: NORMAL")
 
-# GRAPH (stable now)
-if not df_hist.empty:
+# ------------------ GRAPHS ------------------
+if len(df_hist) > 3:
 
     st.markdown("### 📊 CPU Usage")
     st.line_chart(df_hist["CPU"])
@@ -95,11 +96,14 @@ if not df_hist.empty:
     st.markdown("### 📊 Fault Probability")
     st.line_chart(df_hist["Fault_Prob"])
 
-# Logs
+else:
+    st.info(f"⏳ Collecting data... ({len(df_hist)}/5)")
+
+# ------------------ LOGS ------------------
 if not df_hist.empty:
     last = df_hist.iloc[-1]
     st.code(f"[{last['Time']}] CPU={last['CPU']}, Latency={last['Latency']}, Prob={last['Fault_Prob']:.2f}")
 
-# AUTO REFRESH
+# ------------------ AUTO REFRESH ------------------
 if st.session_state.running:
     st.rerun()
